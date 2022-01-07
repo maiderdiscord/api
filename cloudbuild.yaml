@@ -1,0 +1,24 @@
+steps:
+  - name: "golang"
+    entrypoint: "go"
+    args: ["build"]
+    id: "build"
+
+  - name: "alpine"
+    entrypoint: /bin/sh
+    args:
+      - "-c"
+      - |
+        cat << EOF > secret.yaml
+        env_variables:
+          ENV: $_ENV
+        EOF
+      :
+      :
+
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - "app"
+      - "deploy"
+      - "--project=$PROJECT_ID"
+    waitFor: ["build"]
