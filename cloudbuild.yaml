@@ -11,7 +11,7 @@ steps:
       - |
         cat << EOF > secret.yaml
         env_variables:
-          ENV: $_ENV
+          KEYGEN_API_KEY: $_KEYGEN_API_KEY
         EOF
 
   - name: "gcr.io/cloud-builders/gcloud"
