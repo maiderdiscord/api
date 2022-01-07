@@ -14,6 +14,7 @@ import (
 
 	"github.com/maiderdiscord/api/config"
 	"github.com/maiderdiscord/api/graph/generated"
+	"github.com/maiderdiscord/api/graph/model"
 	"github.com/maiderdiscord/api/models"
 )
 
@@ -84,6 +85,7 @@ func (r *queryResolver) ActivateToken(ctx context.Context, licenseKey string) (s
 	}
 
 	httpReq.Header.Add("Authorization", fmt.Sprintf("Bearer %s", config.APIKey))
+	log.Printf("Request Headers: %+v", httpReq.Header)
 
 	resp, err = http.DefaultClient.Do(httpReq)
 	if err != nil {
@@ -107,6 +109,10 @@ func (r *queryResolver) ActivateToken(ctx context.Context, licenseKey string) (s
 	log.Printf("Activate token is generated for key %s", licenseKey)
 
 	return activateTokenData.Data.Attributes.Token, nil
+}
+
+func (r *queryResolver) DownloadLinks(ctx context.Context, licenseKey string) (*model.Links, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 // Query returns generated.QueryResolver implementation.

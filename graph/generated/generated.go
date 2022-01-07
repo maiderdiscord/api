@@ -12,6 +12,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	"github.com/maiderdiscord/api/graph/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -41,13 +42,20 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Links struct {
+		HwidIssuer func(childComplexity int) int
+		Maider     func(childComplexity int) int
+	}
+
 	Query struct {
 		ActivateToken func(childComplexity int, licenseKey string) int
+		DownloadLinks func(childComplexity int, licenseKey string) int
 	}
 }
 
 type QueryResolver interface {
 	ActivateToken(ctx context.Context, licenseKey string) (string, error)
+	DownloadLinks(ctx context.Context, licenseKey string) (*model.Links, error)
 }
 
 type executableSchema struct {
@@ -65,6 +73,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "Links.hwidIssuer":
+		if e.complexity.Links.HwidIssuer == nil {
+			break
+		}
+
+		return e.complexity.Links.HwidIssuer(childComplexity), true
+
+	case "Links.maider":
+		if e.complexity.Links.Maider == nil {
+			break
+		}
+
+		return e.complexity.Links.Maider(childComplexity), true
+
 	case "Query.activateToken":
 		if e.complexity.Query.ActivateToken == nil {
 			break
@@ -76,6 +98,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.ActivateToken(childComplexity, args["licenseKey"].(string)), true
+
+	case "Query.downloadLinks":
+		if e.complexity.Query.DownloadLinks == nil {
+			break
+		}
+
+		args, err := ec.field_Query_downloadLinks_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.DownloadLinks(childComplexity, args["licenseKey"].(string)), true
 
 	}
 	return 0, false
@@ -127,8 +161,14 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "graph/schema.graphqls", Input: `type Query {
+	{Name: "graph/schema.graphqls", Input: `type Links {
+  maider: String!
+  hwidIssuer: String!
+}
+
+type Query {
   activateToken(licenseKey: String!): String!
+  downloadLinks(licenseKey: String!): Links!
 }
 `, BuiltIn: false},
 }
@@ -154,6 +194,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 }
 
 func (ec *executionContext) field_Query_activateToken_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["licenseKey"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("licenseKey"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["licenseKey"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_downloadLinks_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -206,6 +261,76 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _Links_maider(ctx context.Context, field graphql.CollectedField, obj *model.Links) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Links",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Maider, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Links_hwidIssuer(ctx context.Context, field graphql.CollectedField, obj *model.Links) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Links",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.HwidIssuer, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_activateToken(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -246,6 +371,48 @@ func (ec *executionContext) _Query_activateToken(ctx context.Context, field grap
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_downloadLinks(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_downloadLinks_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().DownloadLinks(rctx, args["licenseKey"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Links)
+	fc.Result = res
+	return ec.marshalNLinks2ᚖgithubᚗcomᚋmaiderdiscordᚋapiᚋgraphᚋmodelᚐLinks(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1449,6 +1616,38 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** object.gotpl ****************************
 
+var linksImplementors = []string{"Links"}
+
+func (ec *executionContext) _Links(ctx context.Context, sel ast.SelectionSet, obj *model.Links) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, linksImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Links")
+		case "maider":
+			out.Values[i] = ec._Links_maider(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "hwidIssuer":
+			out.Values[i] = ec._Links_hwidIssuer(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -1473,6 +1672,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_activateToken(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "downloadLinks":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_downloadLinks(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -1756,6 +1969,20 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNLinks2githubᚗcomᚋmaiderdiscordᚋapiᚋgraphᚋmodelᚐLinks(ctx context.Context, sel ast.SelectionSet, v model.Links) graphql.Marshaler {
+	return ec._Links(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNLinks2ᚖgithubᚗcomᚋmaiderdiscordᚋapiᚋgraphᚋmodelᚐLinks(ctx context.Context, sel ast.SelectionSet, v *model.Links) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Links(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

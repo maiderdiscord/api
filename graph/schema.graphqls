@@ -1,3 +1,9 @@
+type Links {
+  maider: String!
+  hwidIssuer: String!
+}
+
 type Query {
   activateToken(licenseKey: String!): String!
+  downloadLinks(licenseKey: String!): Links!
 }
