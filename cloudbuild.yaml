@@ -13,8 +13,6 @@ steps:
         env_variables:
           ENV: $_ENV
         EOF
-      :
-      :
 
   - name: "gcr.io/cloud-builders/gcloud"
     args:
