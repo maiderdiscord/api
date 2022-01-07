@@ -9,7 +9,7 @@ steps:
     args:
       - "-c"
       - |
-        cat << EOF > secret.yaml
+        cat << EOF > app.yaml
         env_variables:
           KEYGEN_API_KEY: $_KEYGEN_API_KEY
         EOF
