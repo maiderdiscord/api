@@ -1,3 +1,1 @@
 runtime: go116
-env_variables:
-  KEYGEN_API_KEY: prod-883d6a80cbefe86d0fd9c9a87e2111c66475ebc374c815f7d3ca82c79f2c3dafv3

@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/maiderdiscord/api/client"
 	"github.com/maiderdiscord/api/config"
 	"github.com/maiderdiscord/api/graph/generated"
 	"github.com/maiderdiscord/api/graph/model"
@@ -112,7 +113,85 @@ func (r *queryResolver) ActivateToken(ctx context.Context, licenseKey string) (s
 }
 
 func (r *queryResolver) DownloadLinks(ctx context.Context, licenseKey string) (*model.Links, error) {
-	panic(fmt.Errorf("not implemented"))
+	licenseKeyReq := &models.ValidateByLicenseKeyRequest{
+		models.ValidateByLicenseKeyRequestMeta{
+			Key: licenseKey,
+		},
+	}
+	reqBody, err := json.Marshal(licenseKeyReq)
+	if err != nil {
+		return nil, errInternalServerError
+	}
+
+	resp, err := http.Post(
+		fmt.Sprintf(
+			"%s/accounts/%s/licenses/actions/validate-key",
+			config.BaseUrl,
+			config.Account,
+		),
+		config.ContentType,
+		bytes.NewReader(reqBody),
+	)
+	if err != nil {
+		return nil, errInternalServerError
+	}
+
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errInternalServerError
+	}
+
+	licenseKeyData := new(models.ValidateByLicenseKeyResponse)
+	if err := json.Unmarshal(respBody, licenseKeyData); err != nil {
+		return nil, errInternalServerError
+	}
+
+	links := new(model.Links)
+
+	cl := client.New()
+
+	filter := &client.GetReleasesFilter{
+		Product: config.ProductMaider,
+		Limit:   1,
+	}
+
+	releases, err := cl.GetReleases(filter)
+	if err != nil {
+		return nil, errInternalServerError
+	}
+
+	if len(releases.Data) != 0 {
+		release := releases.Data[0]
+
+		link, err := cl.GetArtifactDownloadLink(release.ID)
+		if err != nil {
+			return nil, errInternalServerError
+		}
+
+		links.Maider = link
+	}
+
+	filter.Product = config.ProductHWIDIssuer
+
+	releases, err = cl.GetReleases(filter)
+	if err != nil {
+		return nil, errInternalServerError
+	}
+
+	if len(releases.Data) != 0 {
+		release := releases.Data[0]
+
+		link, err := cl.GetArtifactDownloadLink(release.ID)
+		if err != nil {
+			return nil, errInternalServerError
+		}
+
+		links.HwidIssuer = link
+	}
+
+	return links, nil
 }
 
 // Query returns generated.QueryResolver implementation.
